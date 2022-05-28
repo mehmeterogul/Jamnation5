@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
     Rigidbody rb;
+    [SerializeField] Transform ball;
 
     [Header("Speed Values")]
     [SerializeField] float moveSpeed;
@@ -41,6 +42,8 @@ public class PlayerController : MonoBehaviour
                 Quaternion.LookRotation(normalizedDelta, Vector3.up),
                 rotationSpeed * Time.deltaTime
                 );
+
+            ball.Rotate(Vector3.right * 450 * Time.deltaTime);
         }
     }
 
@@ -70,7 +73,7 @@ public class PlayerController : MonoBehaviour
 
             animator.SetBool("isMoving", false);
             
-            rb.AddForce(transform.forward * 25f, ForceMode.Impulse);
+            rb.AddForce(transform.forward * 35f, ForceMode.Impulse);
             canWalk = false;
         }
     }
