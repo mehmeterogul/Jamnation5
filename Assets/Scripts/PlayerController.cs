@@ -60,7 +60,7 @@ public class PlayerController : MonoBehaviour
 
             if (normalizedDelta.x > 0.01f || normalizedDelta.x < -0.01f || normalizedDelta.z > 0.01f || normalizedDelta.z < -0.01f)
             {
-                // animator.SetBool("isMoving", true);
+                animator.SetBool("isMoving", true);
             }
         }
 
@@ -68,7 +68,10 @@ public class PlayerController : MonoBehaviour
         {
             SetMovementVectorsZero();
 
+            animator.SetBool("isMoving", false);
+            
             rb.AddForce(transform.forward * 25f, ForceMode.Impulse);
+            canWalk = false;
         }
     }
 
