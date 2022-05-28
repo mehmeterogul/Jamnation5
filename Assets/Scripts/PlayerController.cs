@@ -6,11 +6,12 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] Animator animator;
     Rigidbody rb;
-    [SerializeField] Transform ball;
+    [SerializeField] Transform ballTransform;
 
     [Header("Speed Values")]
     [SerializeField] float moveSpeed;
     [SerializeField] float rotationSpeed;
+    [SerializeField] float ballRotateSpeed;
 
     [Header("Movement Vector Values")]
     Vector3 lastMousePosition;
@@ -43,7 +44,7 @@ public class PlayerController : MonoBehaviour
                 rotationSpeed * Time.deltaTime
                 );
 
-            ball.Rotate(Vector3.right * 450 * Time.deltaTime);
+            ballTransform.Rotate(Vector3.right * ballRotateSpeed * Time.deltaTime);
         }
     }
 
