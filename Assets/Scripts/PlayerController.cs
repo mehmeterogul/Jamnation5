@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb;
     [SerializeField] Transform ballTransform;
 
+    bool canWalk = true;
+
     [Header("Speed Values")]
     [SerializeField] float moveSpeed;
     [SerializeField] float rotationSpeed;
@@ -18,11 +20,13 @@ public class PlayerController : MonoBehaviour
     Vector3 delta;
     Vector3 normalizedDelta;
 
+    [Header("Other Components")]
     [SerializeField] float shootForce = 50f;
-
     [SerializeField] float powerUpEffectTime = 1f;
 
-    bool canWalk = true;
+    [Header("Particle Effects")]
+    [SerializeField] ParticleSystem fireworkParticle;
+
 
     private void Start()
     {
@@ -150,6 +154,6 @@ public class PlayerController : MonoBehaviour
 
     void LevelSuccess()
     {
-
+        fireworkParticle.Play();
     }
 }
