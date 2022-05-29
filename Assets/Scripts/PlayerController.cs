@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour
 {
@@ -8,6 +10,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Transform ballTransform;
 
     bool canWalk = true;
+    bool gameOver = false;
 
     [Header("Speed Values")]
     [SerializeField] float moveSpeed;
@@ -26,7 +29,24 @@ public class PlayerController : MonoBehaviour
 
     [Header("Particle Effects")]
     [SerializeField] ParticleSystem fireworkParticle;
+    [SerializeField] ParticleSystem hitParticle;
 
+    [Header("Sound Components")]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip hitSound;
+    [SerializeField] AudioClip goalSound;
+    [SerializeField] AudioClip collideSound;
+    [SerializeField] AudioClip pickUpSound;
+    [SerializeField] AudioClip shootSound;
+
+    [Header("UI Components")]
+    [SerializeField] TextMeshProUGUI goalText;
+    [SerializeField] TextMeshProUGUI failText;
+
+    bool isCorouitineActive = false;
+
+    float timeCounter = 0f;
+    bool hasShooted = false;
 
     private void Start()
     {
@@ -60,6 +80,12 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (hasShooted) timeCounter += Time.deltaTime;
+
+        if (timeCounter > 5f) GameOver();
+
+        if (transform.position.y < -2f) GameOver();
+
         if (!canWalk) return;
 
         if (Input.GetMouseButtonDown(0))
@@ -77,7 +103,9 @@ public class PlayerController : MonoBehaviour
             SetMovementVectorsZero();
             
             rb.AddForce(transform.forward * shootForce, ForceMode.Impulse);
+            audioSource.PlayOneShot(shootSound, 1f);
             canWalk = false;
+            hasShooted = true;
         }
     }
 
@@ -105,11 +133,25 @@ public class PlayerController : MonoBehaviour
             if(type == PowerUpType.SpeedUp)
             {
                 moveSpeed = moveSpeedAtStart + 5;
+
+                if (isCorouitineActive)
+                {
+                    StopAllCoroutines();
+                    isCorouitineActive = false;
+                }
+
                 StartCoroutine(DeactiveSpeedEffect());
             }
             else if (type == PowerUpType.SpeedDown)
             {
                 moveSpeed = moveSpeedAtStart - 5;
+
+                if (isCorouitineActive)
+                {
+                    StopAllCoroutines();
+                    isCorouitineActive = false;
+                }
+
                 StartCoroutine(DeactiveSpeedEffect());
             }
             else if (type == PowerUpType.ExtraShoot)
@@ -117,21 +159,24 @@ public class PlayerController : MonoBehaviour
                 //
             }
 
+            audioSource.PlayOneShot(pickUpSound, 1f);
+
             Destroy(other.gameObject);
         }
 
         if(other.gameObject.CompareTag("GoalTrigger"))
         {
-            //
-            Debug.Log("GOAL!!!!!!");
+            Destroy(other.gameObject);
             LevelSuccess();
         }
     }
 
     IEnumerator DeactiveSpeedEffect()
     {
+        isCorouitineActive = true;
         yield return new WaitForSeconds(powerUpEffectTime);
         moveSpeed = moveSpeedAtStart;
+        isCorouitineActive = false;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -142,6 +187,12 @@ public class PlayerController : MonoBehaviour
 
             Vector3 pos = collision.transform.position - transform.position;
             rb.AddForce(pos * 5f, ForceMode.Impulse);
+            hitParticle.gameObject.SetActive(true);
+
+            if(!gameOver)
+            {
+                audioSource.PlayOneShot(hitSound, 1f);
+            }
 
             GameOver();
         }
@@ -149,11 +200,36 @@ public class PlayerController : MonoBehaviour
 
     void GameOver()
     {
+        if (gameOver) return;
 
+        Invoke("FailTextAnimation", 0.05f);
+        gameOver = true;
+
+        FindObjectOfType<GameSceneManager>().LoadCurrentLevel();
+    }
+
+    private void FailTextAnimation()
+    {
+        failText.gameObject.SetActive(true);
     }
 
     void LevelSuccess()
     {
+        if(gameOver) return;
+
         fireworkParticle.Play();
+        audioSource.PlayOneShot(goalSound, 1f);
+        Invoke("GoalTextAnimation", 0.1f);
+
+        gameOver = true;
+
+        FindObjectOfType<GameSceneManager>().LoadNextLevel();
+    }
+
+    private void GoalTextAnimation()
+    {
+        goalText.gameObject.SetActive(true);
+        goalText.transform.DORewind();
+        goalText.transform.DOPunchScale(new Vector3(1f, 1f, 1f), 0.5f);
     }
 }
