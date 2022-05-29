@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class FollowPlayer : MonoBehaviour
 {
-    [SerializeField] Transform player;
-    [SerializeField] Vector3 offset;
-    [SerializeField] float smoothSpeed = 0.125f;
+    Transform player;
+    [SerializeField] float catchSpeed = 2;
 
     private void Start()
     {
@@ -14,10 +13,10 @@ public class FollowPlayer : MonoBehaviour
     }
 
     // Update is called once per frame
-    private void LateUpdate()
+    private void Update()
     {
-        Vector3 followPos = player.position + offset;
-        Vector3 smoothedSpeed = Vector3.Lerp(transform.position, followPos, smoothSpeed * Time.deltaTime);
-        transform.position = smoothedSpeed;
+        Vector3 smoothedSpeed = Vector3.Lerp(transform.position, player.position, catchSpeed * Time.deltaTime);
+        Vector3 newPos = new Vector3(smoothedSpeed.x, transform.position.y, transform.position.z);
+        transform.position = newPos;
     }
 }

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] Animator animator;
     Rigidbody rb;
     [SerializeField] Transform ballTransform;
 
@@ -12,17 +11,23 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float moveSpeed;
     [SerializeField] float rotationSpeed;
     [SerializeField] float ballRotateSpeed;
+    float moveSpeedAtStart;
 
     [Header("Movement Vector Values")]
     Vector3 lastMousePosition;
     Vector3 delta;
     Vector3 normalizedDelta;
 
+    [SerializeField] float shootForce = 50f;
+
+    [SerializeField] float powerUpEffectTime = 1f;
+
     bool canWalk = true;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        moveSpeedAtStart = moveSpeed;
     }
 
     void FixedUpdate()
@@ -61,20 +66,13 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButton(0))
         {
             SetDeltaVariables();
-
-            if (normalizedDelta.x > 0.01f || normalizedDelta.x < -0.01f || normalizedDelta.z > 0.01f || normalizedDelta.z < -0.01f)
-            {
-                animator.SetBool("isMoving", true);
-            }
         }
 
         if (Input.GetMouseButtonUp(0))
         {
             SetMovementVectorsZero();
-
-            animator.SetBool("isMoving", false);
             
-            rb.AddForce(transform.forward * 35f, ForceMode.Impulse);
+            rb.AddForce(transform.forward * shootForce, ForceMode.Impulse);
             canWalk = false;
         }
     }
@@ -92,5 +90,66 @@ public class PlayerController : MonoBehaviour
         normalizedDelta = delta.normalized;
         normalizedDelta.z = normalizedDelta.y;
         normalizedDelta.y = 0;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.CompareTag("PowerUp"))
+        {
+            PowerUpType type = other.GetComponent<PowerUp>().GetPowerUpType();
+
+            if(type == PowerUpType.SpeedUp)
+            {
+                moveSpeed = moveSpeedAtStart + 5;
+                StartCoroutine(DeactiveSpeedEffect());
+            }
+            else if (type == PowerUpType.SpeedDown)
+            {
+                moveSpeed = moveSpeedAtStart - 5;
+                StartCoroutine(DeactiveSpeedEffect());
+            }
+            else if (type == PowerUpType.ExtraShoot)
+            {
+                //
+            }
+
+            Destroy(other.gameObject);
+        }
+
+        if(other.gameObject.CompareTag("GoalTrigger"))
+        {
+            //
+            Debug.Log("GOAL!!!!!!");
+            LevelSuccess();
+        }
+    }
+
+    IEnumerator DeactiveSpeedEffect()
+    {
+        yield return new WaitForSeconds(powerUpEffectTime);
+        moveSpeed = moveSpeedAtStart;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("Obstacle"))
+        {
+            canWalk = false;
+
+            Vector3 pos = collision.transform.position - transform.position;
+            rb.AddForce(pos * 5f, ForceMode.Impulse);
+
+            GameOver();
+        }
+    }
+
+    void GameOver()
+    {
+
+    }
+
+    void LevelSuccess()
+    {
+
     }
 }
